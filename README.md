@@ -140,15 +140,3 @@ Double-click `frontend/admin.html`
 | 2 | `cd backend` → `python -m uvicorn main:app --reload` |
 | 3 | Open `frontend/home.html` in Chrome/Edge |
 
----
-
-## Common Errors
-
-| Error | Fix |
-|---|---|
-| `uvicorn not recognized` | Use `python -m uvicorn main:app --reload` |
-| `Connection refused` in chat | Start the backend server first |
-| `fuzzywuzzy not found` | Run `pip install -r requirements.txt` |
-| Mic not working | Use Chrome or Edge; click Allow when prompted |
-| "Hey DineBot" not working | Must be in Chrome; speak clearly |
-| Admin login fails | Username: admin · Password: admin123 |
