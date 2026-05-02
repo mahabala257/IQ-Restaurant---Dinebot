@@ -1,0 +1,1065 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>IQ Restaurant — DineBot Café</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" crossorigin="anonymous">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav" id="nav">
+  <div class="nav-brand"><span class="brand-iq">IQ</span> Restaurant</div>
+  <div class="nav-links">
+    <a href="#menu">Menu</a>
+    <a href="#tracking">Track</a>
+    <a href="#history">History</a>
+    <a href="admin.html" target="_blank"><i class="fas fa-lock"></i> Admin</a>
+  </div>
+  <div style="display:flex;align-items:center;gap:12px">
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle light/dark mode">
+      <i class="fas fa-moon" id="themeIcon"></i>
+    </button>
+    <div class="nav-cart" onclick="openCart()">
+      <i class="fas fa-shopping-bag"></i>
+      <span class="cart-count" id="cartCount">0</span>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-bg"></div>
+  <div class="hero-content">
+    <div class="hero-badge">🤖 AI-Powered Ordering</div>
+    <h1>Taste the <em>Future</em><br>of Dining</h1>
+    <p>60+ dishes from breakfast to dessert. Order by voice or text. Delivered fast.</p>
+    <div class="hero-actions">
+      <button class="btn-primary" onclick="scrollToMenu()"><i class="fas fa-utensils"></i> Browse Menu</button>
+      <button class="btn-ghost" onclick="openChat()"><i class="fas fa-microphone"></i> Voice Order</button>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat"><span>60+</span><label>Dishes</label></div>
+    <div class="stat"><span>25min</span><label>Avg Delivery</label></div>
+    <div class="stat"><span>4.8★</span><label>Rating</label></div>
+  </div>
+</section>
+
+<!-- MENU -->
+<section class="menu-section" id="menu">
+  <div class="section-header">
+    <h2>Our Full Menu</h2>
+    <p>Fresh, authentic, made to order</p>
+  </div>
+
+  <!-- Controls -->
+  <div class="menu-controls">
+    <div class="search-bar">
+      <i class="fas fa-search"></i>
+      <input type="text" id="menuSearch" placeholder="Search dishes, ingredients, tags..." oninput="filterMenu()">
+      <button class="clear-search" onclick="clearSearch()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="filter-row">
+      <button class="filter-btn active" data-filter="all" onclick="setFilter('all',this)">All</button>
+      <button class="filter-btn" data-filter="Breakfast" onclick="setFilter('Breakfast',this)">🌅 Breakfast</button>
+      <button class="filter-btn" data-filter="Lunch" onclick="setFilter('Lunch',this)">☀️ Lunch</button>
+      <button class="filter-btn" data-filter="Dinner" onclick="setFilter('Dinner',this)">🌙 Dinner</button>
+      <button class="filter-btn" data-filter="Snacks" onclick="setFilter('Snacks',this)">🍿 Snacks</button>
+      <button class="filter-btn" data-filter="Drinks" onclick="setFilter('Drinks',this)">🥤 Drinks</button>
+      <button class="filter-btn" data-filter="Desserts" onclick="setFilter('Desserts',this)">🍮 Desserts</button>
+      <button class="filter-btn veg-filter" id="vegToggle" onclick="toggleVeg()">🟢 Veg Only</button>
+    </div>
+  </div>
+
+  <div class="menu-grid" id="menuGrid">
+    <div class="loading-spinner"><i class="fas fa-circle-notch fa-spin"></i> Loading menu...</div>
+  </div>
+</section>
+
+<!-- TRACKING SECTION -->
+<section class="tracking-section" id="tracking">
+  <div class="section-header light">
+    <h2>📦 Track Your Order</h2>
+    <p>Real-time updates on your order status</p>
+  </div>
+  <div class="track-form">
+    <input type="number" id="trackInput" placeholder="Enter Order ID..." min="1">
+    <button onclick="trackOrder()"><i class="fas fa-search"></i> Track</button>
+  </div>
+  <div id="trackResult"></div>
+</section>
+
+<!-- ORDER HISTORY SECTION -->
+<section class="history-section" id="history">
+  <div class="section-header">
+    <h2>📋 Order History</h2>
+    <p>Your past orders at IQ Restaurant</p>
+  </div>
+  <div id="historyList" class="history-list">
+    <button class="btn-primary" onclick="loadHistory()"><i class="fas fa-history"></i> Load My History</button>
+  </div>
+</section>
+
+<!-- CART SIDEBAR -->
+<div class="cart-overlay" id="cartOverlay" onclick="closeCart()"></div>
+<div class="cart-sidebar" id="cartSidebar">
+  <div class="cart-header">
+    <h3>🛒 Your Cart</h3>
+    <button onclick="closeCart()"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="cart-items" id="cartItems">
+    <div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Cart is empty</p></div>
+  </div>
+  <div class="cart-footer" id="cartFooter" style="display:none">
+    <div class="cart-total">Total: <strong id="cartTotalDisplay">₹0</strong></div>
+    <button class="btn-confirm" onclick="confirmOrder()"><i class="fas fa-check-circle"></i> Confirm Order</button>
+    <button class="btn-cancel" onclick="cancelOrder()"><i class="fas fa-times-circle"></i> Cancel</button>
+  </div>
+</div>
+
+<!-- RATING MODAL -->
+<div class="modal-overlay" id="ratingModal" style="display:none">
+  <div class="modal">
+    <h3>Rate Your Order</h3>
+    <p id="ratingOrderText"></p>
+    <div class="star-row" id="starRow">
+      <span onclick="setRating(1)">★</span><span onclick="setRating(2)">★</span>
+      <span onclick="setRating(3)">★</span><span onclick="setRating(4)">★</span>
+      <span onclick="setRating(5)">★</span>
+    </div>
+    <textarea id="ratingComment" placeholder="Leave a comment (optional)..." rows="3"></textarea>
+    <button class="btn-primary" onclick="submitRating()">Submit Rating</button>
+    <button class="btn-ghost" onclick="closeRating()">Skip</button>
+  </div>
+</div>
+
+<!-- UPI MODAL -->
+<div class="modal-overlay" id="upiModal" style="display:none">
+  <div class="modal">
+    <h3>💳 Pay via UPI</h3>
+    <p id="upiAmount"></p>
+    <div class="upi-qr" id="upiQr">
+      <!-- QR placeholder — replace with real UPI QR in production -->
+      <svg width="180" height="180" viewBox="0 0 180 180">
+        <rect width="180" height="180" fill="#fff" rx="8"/>
+        <text x="90" y="95" text-anchor="middle" font-size="12" fill="#333">UPI QR Code</text>
+        <text x="90" y="115" text-anchor="middle" font-size="10" fill="#888">iqrestaurant@upi</text>
+        <!-- Simulated QR pattern -->
+        <rect x="20" y="20" width="40" height="40" fill="none" stroke="#000" stroke-width="4"/>
+        <rect x="28" y="28" width="24" height="24" fill="#000"/>
+        <rect x="120" y="20" width="40" height="40" fill="none" stroke="#000" stroke-width="4"/>
+        <rect x="128" y="28" width="24" height="24" fill="#000"/>
+        <rect x="20" y="120" width="40" height="40" fill="none" stroke="#000" stroke-width="4"/>
+        <rect x="28" y="128" width="24" height="24" fill="#000"/>
+        <rect x="70" y="70" width="40" height="40" fill="none" stroke="#000" stroke-width="2"/>
+        <rect x="78" y="78" width="24" height="24" fill="#000"/>
+      </svg>
+    </div>
+    <p class="upi-id">UPI ID: <strong>iqrestaurant@upi</strong></p>
+    <p style="font-size:0.85rem;opacity:0.7">Scan with any UPI app: GPay, PhonePe, Paytm</p>
+    <button class="btn-primary" onclick="closeUpi()">Done — Paid!</button>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     CHAT WIDGET
+═══════════════════════════════════════════════════════════ -->
+<div class="chat-widget minimized" id="chatWidget">
+  <div class="chat-header">
+    <div class="agent-avatar">🤖</div>
+    <div class="chat-header-info" onclick="toggleChat()" style="cursor:pointer;flex:1">
+      <h4>DineBot</h4>
+      <span id="chatStatus">Online • Tap to order</span>
+    </div>
+    <div class="header-actions" style="display:flex;align-items:center;gap:6px">
+      <button onclick="toggleChat()" title="Minimise"
+        style="background:rgba(255,255,255,0.08);border:none;color:rgba(255,255,255,0.6);
+               width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:0.75rem;
+               display:flex;align-items:center;justify-content:center;transition:background 0.2s"
+        onmouseover="this.style.background='rgba(255,255,255,0.2)'"
+        onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+        <i class="fas fa-minus" id="chatChevron"></i>
+      </button>
+      <button onclick="closeChat()" title="Close DineBot"
+        style="background:rgba(239,68,68,0.15);border:none;color:#f87171;
+               width:28px;height:28px;border-radius:50%;cursor:pointer;font-size:0.8rem;
+               display:flex;align-items:center;justify-content:center;transition:background 0.2s"
+        onmouseover="this.style.background='rgba(239,68,68,0.4)'"
+        onmouseout="this.style.background='rgba(239,68,68,0.15)'">
+        <i class="fas fa-times"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="chat-body" id="chatBody">
+
+    <!-- Noise / voice banner -->
+    <div class="voice-banner" id="voiceBanner">
+      <div class="voice-waves"><span></span><span></span><span></span><span></span><span></span></div>
+      <span id="voiceBannerText">Listening…</span>
+      <div class="noise-indicator" id="noiseIndicator" title="Noise level">
+        <i class="fas fa-volume-up"></i>
+        <div class="noise-bars">
+          <span id="nb1"></span><span id="nb2"></span><span id="nb3"></span>
+        </div>
+      </div>
+      <button onclick="stopVoice()" class="voice-stop-btn"><i class="fas fa-stop"></i></button>
+    </div>
+
+    <!-- Quick chips -->
+    <div class="quick-chips" id="quickChips">
+      <button onclick="quickSend('Show me the menu')">🍽️ Menu</button>
+      <button onclick="quickSend('Show my cart')">🛒 Cart</button>
+      <button onclick="quickSend('Repeat my last order')">♻️ Repeat</button>
+      <button onclick="quickSend('Track my last order')">📦 Track</button>
+    </div>
+
+    <div class="chat-messages" id="chatMessages">
+      <div class="message bot">
+        Namaste! 🙏 I'm <strong>DineBot</strong>, your AI dining assistant.<br><br>
+        I can take your order by <strong>voice 🎤 or text</strong>. We have 60+ dishes — breakfast, lunch, dinner, snacks, drinks and desserts!<br><br>
+        <em>Say "Add 2 Chicken Biryani" or tap 🎤 to speak!</em>
+      </div>
+    </div>
+
+    <div class="chat-input">
+      <input type="text" id="userInput" placeholder="Type or press 🎤 to speak…" onkeypress="handleKey(event)">
+      <button class="voice-btn" id="voiceBtn" onclick="toggleVoice()" title="Voice order">
+        <i class="fas fa-microphone" id="voiceIcon"></i>
+      </button>
+      <button class="send-btn" onclick="sendUserMessage()">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- FAB -->
+<button class="chat-fab" id="chatFab" onclick="toggleChat()">
+  <i class="fas fa-robot"></i>
+  <span>Order</span>
+</button>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-brand"><span class="brand-iq">IQ</span> Restaurant</div>
+    <div class="footer-links">
+      <span><i class="fas fa-phone"></i> +91 9876543210</span>
+      <span><i class="fas fa-envelope"></i> info@iqrestaurant.in</span>
+      <span><i class="fas fa-map-marker-alt"></i> Chennai, India</span>
+    </div>
+    <p style="opacity:0.4;margin-top:20px;font-size:0.8rem">© 2024 IQ Restaurant. All rights reserved.</p>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+const API = 'http://localhost:8000';
+const SESSION_ID = 'user_' + (localStorage.getItem('iq_sid') || (() => {
+  const id = Math.random().toString(36).slice(2);
+  localStorage.setItem('iq_sid', id);
+  return id;
+})());
+
+let cart         = {};
+let allMenuItems = [];
+let currentFilter = 'all';
+let vegOnly       = false;
+let selectedRating = 5;
+let pendingRatingOrder = null;
+let trackPollingTimer = null;
+
+// ═══════════════════════════════════════════════════
+// BOOT
+// ═══════════════════════════════════════════════════
+window.addEventListener('load', () => {
+  initTheme();
+  loadMenu();
+  scrollNavHighlight();
+  initWakeWord();
+});
+
+// ═══════════════════════════════════════════════════
+// NAV SCROLL
+// ═══════════════════════════════════════════════════
+window.addEventListener('scroll', () => {
+  document.getElementById('nav').classList.toggle('scrolled', window.scrollY > 60);
+});
+
+function scrollToMenu() {
+  document.getElementById('menu').scrollIntoView({ behavior: 'smooth' });
+}
+function scrollNavHighlight() {}
+
+// ═══════════════════════════════════════════════════
+// MENU LOAD & RENDER
+// ═══════════════════════════════════════════════════
+async function loadMenu() {
+  try {
+    const res  = await fetch(`${API}/menu`);
+    allMenuItems = await res.json();
+    renderMenu(allMenuItems);
+  } catch {
+    document.getElementById('menuGrid').innerHTML =
+      '<p style="color:#ff8;padding:20px">⚠️ Could not load menu. Is the backend running?</p>';
+  }
+}
+
+function renderMenu(items) {
+  const grid = document.getElementById('menuGrid');
+  if (!items.length) {
+    grid.innerHTML = '<p style="color:#aaa;padding:40px;text-align:center">No items found.</p>';
+    return;
+  }
+  grid.innerHTML = items.map(item => {
+    const badge = item.badge === 'bestseller' ? '<span class="badge bestseller">🔥 Bestseller</span>'
+                : item.badge === 'popular'    ? '<span class="badge popular">⭐ Popular</span>'
+                : item.badge === 'new'        ? '<span class="badge new-item">✨ New</span>'
+                : '';
+    const vegDot = item.veg
+      ? '<span class="veg-dot" title="Veg">🟢</span>'
+      : '<span class="veg-dot" title="Non-Veg">🔴</span>';
+    const lowStock = item.stock <= 5
+      ? '<span class="low-stock-tag">⚡ Only ' + item.stock + ' left!</span>'
+      : '';
+    const inCart = cart[item.name] ? cart[item.name] : 0;
+    const tags   = (item.tags || []).map(t => `<span class="tag">${t}</span>`).join('');
+
+    return `
+    <div class="menu-card" data-cat="${item.category}" data-veg="${item.veg}">
+      <div class="card-top">
+        <div class="item-emoji">${item.emoji || '🍽️'}</div>
+        ${badge}
+        ${vegDot}
+      </div>
+      <div class="card-body">
+        <h3>${item.name}</h3>
+        <div class="card-tags">${tags}</div>
+        ${lowStock}
+        <div class="card-footer">
+          <span class="item-price">₹${item.price}</span>
+          <div class="qty-control" id="qty-${item.name.replace(/\s/g,'_')}">
+            ${inCart === 0
+              ? `<button class="add-btn" onclick="addOne('${item.name}')">+ Add</button>`
+              : `<button class="qty-btn" onclick="removeOne('${item.name}')">−</button>
+                 <span class="qty-num">${inCart}</span>
+                 <button class="qty-btn" onclick="addOne('${item.name}')">+</button>`
+            }
+          </div>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterMenu() {
+  const q    = document.getElementById('menuSearch').value.toLowerCase();
+  let items  = allMenuItems;
+  if (currentFilter !== 'all') items = items.filter(i => i.category === currentFilter);
+  if (vegOnly)                 items = items.filter(i => i.veg);
+  if (q)                       items = items.filter(i =>
+    i.name.toLowerCase().includes(q) ||
+    (i.tags || []).some(t => t.includes(q)) ||
+    i.category.toLowerCase().includes(q)
+  );
+  renderMenu(items);
+}
+
+function setFilter(f, btn) {
+  currentFilter = f;
+  document.querySelectorAll('.filter-btn:not(.veg-filter)').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  filterMenu();
+}
+
+function toggleVeg() {
+  vegOnly = !vegOnly;
+  document.getElementById('vegToggle').classList.toggle('active', vegOnly);
+  filterMenu();
+}
+
+function clearSearch() {
+  document.getElementById('menuSearch').value = '';
+  filterMenu();
+}
+
+// ═══════════════════════════════════════════════════
+// CART
+// ═══════════════════════════════════════════════════
+function addOne(name) {
+  cart[name] = (cart[name] || 0) + 1;
+  updateCartUI();
+  refreshQtyControls();
+  animateCartBadge();
+}
+
+function removeOne(name) {
+  if (!cart[name]) return;
+  cart[name]--;
+  if (cart[name] <= 0) delete cart[name];
+  updateCartUI();
+  refreshQtyControls();
+}
+
+function refreshQtyControls() {
+  // Re-render just the qty control for each visible card
+  document.querySelectorAll('.menu-card').forEach(card => {
+    const nameEl = card.querySelector('h3');
+    if (!nameEl) return;
+    const name   = nameEl.textContent;
+    const key    = name.replace(/\s/g, '_');
+    const ctrl   = card.querySelector(`#qty-${key}`) || card.querySelector('.qty-control');
+    if (!ctrl) return;
+    const qty    = cart[name] || 0;
+    ctrl.innerHTML = qty === 0
+      ? `<button class="add-btn" onclick="addOne('${name}')">+ Add</button>`
+      : `<button class="qty-btn" onclick="removeOne('${name}')">−</button>
+         <span class="qty-num">${qty}</span>
+         <button class="qty-btn" onclick="addOne('${name}')">+</button>`;
+  });
+}
+
+function updateCartUI() {
+  const count = Object.values(cart).reduce((a,b) => a+b, 0);
+  document.getElementById('cartCount').textContent = count;
+
+  const total = calcTotal();
+  document.getElementById('cartTotalDisplay').textContent = `₹${total.toFixed(2)}`;
+
+  const itemsDiv = document.getElementById('cartItems');
+  const footer   = document.getElementById('cartFooter');
+
+  if (!Object.keys(cart).length) {
+    itemsDiv.innerHTML = '<div class="empty-cart"><i class="fas fa-shopping-bag"></i><p>Cart is empty</p></div>';
+    footer.style.display = 'none';
+    return;
+  }
+
+  footer.style.display = 'flex';
+  itemsDiv.innerHTML = Object.entries(cart).map(([name, qty]) => {
+    const price = getItemPrice(name);
+    return `<div class="cart-item">
+      <div class="ci-info">
+        <span class="ci-name">${name}</span>
+        <span class="ci-price">₹${(price*qty).toFixed(0)}</span>
+      </div>
+      <div class="ci-qty">
+        <button onclick="removeOne('${name}')">−</button>
+        <span>${qty}</span>
+        <button onclick="addOne('${name}')">+</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function calcTotal() {
+  return Object.entries(cart).reduce((sum, [name, qty]) => sum + getItemPrice(name) * qty, 0);
+}
+
+function getItemPrice(name) {
+  const item = allMenuItems.find(i => i.name === name);
+  return item ? item.price : 0;
+}
+
+function animateCartBadge() {
+  const badge = document.getElementById('cartCount');
+  badge.classList.remove('pop');
+  void badge.offsetWidth;
+  badge.classList.add('pop');
+}
+
+function openCart()  {
+  document.getElementById('cartSidebar').classList.add('open');
+  document.getElementById('cartOverlay').classList.add('active');
+}
+function closeCart() {
+  document.getElementById('cartSidebar').classList.remove('open');
+  document.getElementById('cartOverlay').classList.remove('active');
+}
+
+// ═══════════════════════════════════════════════════
+// ORDER CONFIRM / CANCEL
+// ═══════════════════════════════════════════════════
+async function confirmOrder() {
+  if (!Object.keys(cart).length) return;
+  closeCart();
+  const total = calcTotal();
+
+  try {
+    const res  = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: SESSION_ID, intent: 'confirm', text: 'confirm' })
+    });
+    const data = await res.json();
+
+    openChat();
+    addBotMessage(data.text, data);
+
+    // Speak confirmation
+    speak(data.text);
+
+    // Show UPI QR
+    if (data.show_upi) {
+      document.getElementById('upiAmount').textContent = `Amount: ₹${total.toFixed(2)}`;
+      document.getElementById('upiModal').style.display = 'flex';
+    }
+
+    // Start tracking poll
+    if (data.order_id) {
+      pendingRatingOrder = data.order_id;
+      startTrackingPoll(data.order_id);
+    }
+
+    cart = {};
+    updateCartUI();
+    refreshQtyControls();
+  } catch {
+    addBotMessage('⚠️ Server error. Please try again.');
+  }
+}
+
+async function cancelOrder() {
+  closeCart();
+  const res  = await fetch(`${API}/chat`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({ session_id: SESSION_ID, intent: 'cancel', text: 'cancel' })
+  });
+  const data = await res.json();
+  openChat();
+  addBotMessage(data.text, data);
+  cart = {};
+  updateCartUI();
+  refreshQtyControls();
+}
+
+// ═══════════════════════════════════════════════════
+// TRACKING WITH PUSH UPDATES (polling)
+// ═══════════════════════════════════════════════════
+async function trackOrder() {
+  const id  = parseInt(document.getElementById('trackInput').value);
+  if (!id)  return;
+  renderTrackResult(id);
+}
+
+function renderTrackResult(orderId) {
+  const div = document.getElementById('trackResult');
+  div.innerHTML = '<p style="color:#aaa">Checking…</p>';
+
+  fetch(`${API}/status/${orderId}`)
+    .then(r => r.json())
+    .then(data => {
+      const steps   = ["Order Received","Preparing","Ready","Out for Delivery","Delivered"];
+      const current = data.status;
+      const idx     = steps.indexOf(current);
+      const pct     = Math.round(((idx+1)/steps.length)*100);
+
+      div.innerHTML = `
+        <div class="track-card">
+          <h4>Order #${orderId}</h4>
+          <div class="track-status">${current}</div>
+          <div class="track-progress">
+            <div class="track-bar"><div class="track-fill" style="width:${pct}%"></div></div>
+            <div class="track-steps">
+              ${steps.map((s,i) => `<span class="${i <= idx ? 'done' : ''}">${s}</span>`).join('')}
+            </div>
+          </div>
+        </div>`;
+
+      if (current === 'Delivered' && pendingRatingOrder === orderId) {
+        setTimeout(() => openRatingModal(orderId), 2000);
+      }
+    })
+    .catch(() => { div.innerHTML = '<p style="color:#f88">Order not found.</p>'; });
+}
+
+function startTrackingPoll(orderId) {
+  if (trackPollingTimer) clearInterval(trackPollingTimer);
+  trackPollingTimer = setInterval(() => {
+    fetch(`${API}/status/${orderId}`)
+      .then(r => r.json())
+      .then(data => {
+        // Update in chat if there's a tracking UI visible
+        const el = document.getElementById(`track-live-${orderId}`);
+        if (el) {
+          const steps = ["Order Received","Preparing","Ready","Out for Delivery","Delivered"];
+          const idx   = steps.indexOf(data.status);
+          const pct   = Math.round(((idx+1)/steps.length)*100);
+          el.querySelector('.track-fill').style.width = pct + '%';
+          el.querySelector('.track-status').textContent = data.status;
+        }
+        if (data.status === 'Delivered') {
+          clearInterval(trackPollingTimer);
+          if (pendingRatingOrder) setTimeout(() => openRatingModal(pendingRatingOrder), 1500);
+        }
+      });
+  }, 15000); // poll every 15 seconds
+}
+
+// ═══════════════════════════════════════════════════
+// ORDER HISTORY
+// ═══════════════════════════════════════════════════
+async function loadHistory() {
+  const div = document.getElementById('historyList');
+  div.innerHTML = '<p style="color:#aaa">Loading…</p>';
+  try {
+    const res  = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: SESSION_ID, intent: 'history', text: 'history' })
+    });
+    const data = await res.json();
+    if (!data.history || !data.history.length) {
+      div.innerHTML = '<p style="color:#aaa">No past orders yet.</p>';
+      return;
+    }
+    div.innerHTML = data.history.map(h => `
+      <div class="history-card">
+        <div class="hc-header">
+          <span>Order #${h.order_id}</span>
+          <span class="hc-status ${h.status?.replace(' ','-').toLowerCase()}">${h.status || 'Delivered'}</span>
+          <span>₹${h.total}</span>
+        </div>
+        <div class="hc-items">${Object.entries(h.items).map(([n,q]) => `${q}×${n}`).join(', ')}</div>
+        <div class="hc-footer">
+          <button class="btn-sm" onclick="reorderFromHistory(${JSON.stringify(h.items).replace(/"/g,"'")})">♻️ Reorder</button>
+          ${!h.rated ? `<button class="btn-sm" onclick="openRatingModal(${h.order_id})">⭐ Rate</button>` : `<span class="rated-badge">⭐ ${h.rating || '?'}</span>`}
+        </div>
+      </div>`).join('');
+  } catch {
+    div.innerHTML = '<p style="color:#f88">Could not load history.</p>';
+  }
+}
+
+function reorderFromHistory(items) {
+  // items might be a string representation from onclick
+  let obj = typeof items === 'string' ? JSON.parse(items.replace(/'/g,'"')) : items;
+  Object.entries(obj).forEach(([name, qty]) => { cart[name] = (cart[name]||0) + parseInt(qty); });
+  updateCartUI();
+  refreshQtyControls();
+  animateCartBadge();
+  openCart();
+}
+
+// ═══════════════════════════════════════════════════
+// RATING
+// ═══════════════════════════════════════════════════
+function openRatingModal(orderId) {
+  pendingRatingOrder = orderId;
+  document.getElementById('ratingOrderText').textContent = `Order #${orderId}`;
+  setRating(5);
+  document.getElementById('ratingModal').style.display = 'flex';
+}
+
+function closeRating() {
+  document.getElementById('ratingModal').style.display = 'none';
+}
+
+function setRating(n) {
+  selectedRating = n;
+  document.querySelectorAll('#starRow span').forEach((s, i) => {
+    s.classList.toggle('active', i < n);
+  });
+}
+
+async function submitRating() {
+  const comment = document.getElementById('ratingComment').value;
+  await fetch(`${API}/chat`, {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      session_id: SESSION_ID, intent: 'rate',
+      order_id: pendingRatingOrder, rating: selectedRating, comment
+    })
+  });
+  closeRating();
+  openChat();
+  addBotMessage(`Thank you for your ${'⭐'.repeat(selectedRating)} rating! We appreciate your feedback! 🙏`);
+}
+
+// ═══════════════════════════════════════════════════
+// UPI
+// ═══════════════════════════════════════════════════
+function closeUpi() {
+  document.getElementById('upiModal').style.display = 'none';
+}
+
+// ═══════════════════════════════════════════════════
+// CHAT
+// ═══════════════════════════════════════════════════
+function openChat() {
+  const w = document.getElementById('chatWidget');
+  w.style.display = 'flex';
+  if (w.classList.contains('minimized')) {
+    w.classList.remove('minimized');
+    document.getElementById('chatFab').style.display = 'none';
+  }
+}
+
+function toggleChat() {
+  const w    = document.getElementById('chatWidget');
+  const fab  = document.getElementById('chatFab');
+  const ch   = document.getElementById('chatChevron');
+  const open = w.classList.contains('minimized');
+  // If fully hidden, show it first
+  w.style.display = 'flex';
+  w.classList.toggle('minimized', !open);
+  fab.style.display = open ? 'none' : 'flex';
+  ch.className = 'fas fa-minus';
+  if (!open) stopVoice();
+}
+
+function closeChat() {
+  // Fully hide the chat widget and show the FAB
+  const w   = document.getElementById('chatWidget');
+  const fab = document.getElementById('chatFab');
+  w.style.display   = 'none';
+  fab.style.display = 'flex';
+  stopVoice();
+}
+
+function handleKey(e) { if (e.key === 'Enter') sendUserMessage(); }
+
+function quickSend(text) {
+  openChat();
+  sendMessage(text, detectIntent(text));
+}
+
+function sendUserMessage() {
+  const text = document.getElementById('userInput').value.trim();
+  if (!text) return;
+  document.getElementById('userInput').value = '';
+  sendMessage(text, detectIntent(text));
+}
+
+function detectIntent(text) {
+  const t = text.toLowerCase();
+  if (t.includes('track') || t.includes('status'))     return 'track';
+  if (t.includes('history') || t.includes('past order')) return 'history';
+  if (t.includes('repeat') || t.includes('same again')) return 'repeat';
+  if (t.includes('confirm') || t.includes('place') || t.includes('checkout')) return 'confirm';
+  if (t.includes('cancel'))                             return 'cancel';
+  if (t.includes('cart') || t.includes('my order'))    return 'cart';
+  if (t.includes('remove') || t.includes('delete'))    return 'remove';
+  return 'add';
+}
+
+async function sendMessage(text, intent) {
+  openChat();
+  addUserMessage(text);
+  const loadId = 'load-' + Date.now();
+  addLoading(loadId);
+
+  try {
+    const res  = await fetch(`${API}/chat`, {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({ session_id: SESSION_ID, intent, text })
+    });
+    const data = await res.json();
+    removeMsg(loadId);
+
+    addBotMessage(data.text, data);
+    speak(data.text);
+
+    // Sync cart from server response
+    if (data.cart) {
+      cart = data.cart;
+      updateCartUI();
+      refreshQtyControls();
+    }
+    if (data.show_upi && data.total) {
+      document.getElementById('upiAmount').textContent = `Amount: ₹${data.total.toFixed(2)}`;
+      document.getElementById('upiModal').style.display = 'flex';
+    }
+    if (data.order_id) {
+      pendingRatingOrder = data.order_id;
+      startTrackingPoll(data.order_id);
+    }
+  } catch {
+    removeMsg(loadId);
+    addBotMessage('⚠️ Could not reach server. Is the backend running on port 8000?');
+  }
+}
+
+function addUserMessage(text) {
+  const d = document.createElement('div');
+  d.className = 'message user';
+  d.textContent = text;
+  appendMsg(d);
+}
+
+function addBotMessage(text, data = {}) {
+  const d = document.createElement('div');
+  d.className = 'message bot';
+  d.innerHTML = (text || '').replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+
+  // Suggestions chips
+  if (data.suggestions && data.suggestions.length) {
+    const chips = document.createElement('div');
+    chips.className = 'suggestion-chips';
+    data.suggestions.forEach(s => {
+      const b = document.createElement('button');
+      b.textContent = s;
+      b.onclick = () => quickSend(s);
+      chips.appendChild(b);
+    });
+    d.appendChild(chips);
+  }
+
+  // Confirm / Cancel action buttons
+  if (data.show_actions) {
+    const actions = document.createElement('div');
+    actions.className = 'message-actions';
+
+    const conf = document.createElement('button');
+    conf.className = 'action-btn confirm-btn';
+    conf.innerHTML = '<i class="fas fa-check-circle"></i> Confirm Order';
+    conf.onclick = () => { actions.querySelectorAll('button').forEach(b=>b.disabled=true); actions.style.opacity='0.5'; confirmOrder(); };
+
+    const canc = document.createElement('button');
+    canc.className = 'action-btn cancel-btn';
+    canc.innerHTML = '<i class="fas fa-times-circle"></i> Cancel';
+    canc.onclick = () => { actions.querySelectorAll('button').forEach(b=>b.disabled=true); actions.style.opacity='0.5'; cancelOrder(); };
+
+    actions.appendChild(conf);
+    actions.appendChild(canc);
+    d.appendChild(actions);
+  }
+
+  // Track UI after order placed
+  if (data.show_track && data.order_id) {
+    const trackDiv = document.createElement('div');
+    trackDiv.className = 'message-actions';
+    const tb = document.createElement('button');
+    tb.className = 'action-btn track-btn';
+    tb.innerHTML = '<i class="fas fa-location-arrow"></i> Track Live';
+    tb.onclick = () => {
+      document.getElementById('trackInput').value = data.order_id;
+      document.getElementById('tracking').scrollIntoView({behavior:'smooth'});
+      setTimeout(trackOrder, 400);
+    };
+    trackDiv.appendChild(tb);
+    d.appendChild(trackDiv);
+  }
+
+  // Inline live tracking widget in chat
+  if (data.show_track_ui && data.order_id) {
+    const steps   = data.steps || ["Order Received","Preparing","Ready","Out for Delivery","Delivered"];
+    const idx     = data.current_step || 0;
+    const pct     = Math.round(((idx+1)/steps.length)*100);
+    const trackEl = document.createElement('div');
+    trackEl.id        = `track-live-${data.order_id}`;
+    trackEl.className = 'inline-track';
+    trackEl.innerHTML = `
+      <div class="track-status" style="font-weight:600;color:var(--accent);margin-bottom:6px">${data.status}</div>
+      <div class="track-bar" style="height:6px;background:rgba(255,255,255,0.1);border-radius:4px;margin-bottom:8px">
+        <div class="track-fill" style="height:100%;width:${pct}%;background:var(--primary);border-radius:4px;transition:width 0.5s"></div>
+      </div>
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
+        ${steps.map((s,i) => `<span style="font-size:0.7rem;opacity:${i<=idx?1:0.4}">${i<=idx?'✅':'⏳'} ${s}</span>`).join('')}
+      </div>`;
+    d.appendChild(trackEl);
+  }
+
+  appendMsg(d);
+}
+
+function addLoading(id) {
+  const d = document.createElement('div');
+  d.className = 'message bot loading';
+  d.id = id;
+  d.innerHTML = '<span class="dot-pulse"><span></span><span></span><span></span></span>';
+  appendMsg(d);
+}
+
+function removeMsg(id) {
+  const el = document.getElementById(id);
+  if (el) el.remove();
+}
+
+function appendMsg(el) {
+  const box = document.getElementById('chatMessages');
+  box.appendChild(el);
+  box.scrollTop = box.scrollHeight;
+}
+
+// ═══════════════════════════════════════════════════
+// VOICE
+// ═══════════════════════════════════════════════════
+let recognition = null;
+let isListening = false;
+let audioCtx    = null;
+let analyser    = null;
+let noiseTimer  = null;
+
+function toggleVoice() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { addBotMessage('⚠️ Voice ordering needs Chrome or Edge.'); return; }
+  isListening ? stopVoice() : startVoice();
+}
+
+function startVoice() {
+  const SR     = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  // Check mic permission first, show friendly message
+  if (navigator.permissions) {
+    navigator.permissions.query({ name: 'microphone' }).then(result => {
+      if (result.state === 'denied') {
+        addBotMessage('🎤 Microphone is blocked!\n\nTo fix:\n1. Click the 🔒 lock icon in your browser address bar\n2. Set Microphone to Allow\n3. Refresh the page');
+        return;
+      }
+    }).catch(() => {});
+  }
+
+  recognition  = new SR();
+  recognition.continuous    = false;
+  recognition.interimResults = true;
+  recognition.lang          = 'en-IN';
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('voiceBtn').classList.add('listening');
+    document.getElementById('voiceIcon').className = 'fas fa-stop';
+    document.getElementById('voiceBanner').classList.add('active');
+    document.getElementById('chatStatus').textContent = '🎤 Listening...';
+    startNoiseMonitor();
+  };
+
+  recognition.onresult = e => {
+    let final = '', interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) final += t; else interim += t;
+    }
+    document.getElementById('userInput').value = final || interim;
+    if (final) document.getElementById('voiceBannerText').textContent = '✅ Got it!';
+  };
+
+  recognition.onend = () => {
+    isListening = false;
+    stopNoiseMonitor();
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceIcon').className = 'fas fa-microphone';
+    document.getElementById('voiceBanner').classList.remove('active');
+    document.getElementById('chatStatus').textContent = 'Online • Tap to order';
+    document.getElementById('userInput').placeholder = 'Type or press 🎤 to speak…';
+
+    const text = document.getElementById('userInput').value.trim();
+    if (text) {
+      setTimeout(() => {
+        sendMessage(text, detectIntent(text));
+        document.getElementById('userInput').value = '';
+      }, 300);
+    }
+  };
+
+  recognition.onerror = e => {
+    isListening = false;
+    stopNoiseMonitor();
+    document.getElementById('voiceBtn').classList.remove('listening');
+    document.getElementById('voiceIcon').className = 'fas fa-microphone';
+    document.getElementById('voiceBanner').classList.remove('active');
+    if (e.error === 'not-allowed') {
+      addBotMessage('🎤 Microphone access was blocked.\n\nTo allow it:\n1. Click the 🔒 lock icon in the address bar\n2. Find \'Microphone\' → set to \'Allow\'\n3. Refresh the page and try again');
+    } else if (e.error === 'no-speech') {
+      addBotMessage('🎤 No speech detected. Please try speaking again.');
+    } else if (e.error === 'network') {
+      addBotMessage('🎤 Network error. Please check your connection.');
+    } else {
+      addBotMessage('🎤 Voice error: ' + e.error + '. Please try again.');
+    }
+  };
+
+  document.getElementById('userInput').value = '';
+  document.getElementById('userInput').placeholder = '🎤 Listening...';
+  recognition.start();
+}
+
+function stopVoice() {
+  if (recognition && isListening) recognition.stop();
+  stopNoiseMonitor();
+}
+
+// Noise level indicator using Web Audio API
+function startNoiseMonitor() {
+  navigator.mediaDevices.getUserMedia({ audio: true, video: false })
+    .then(stream => {
+      audioCtx  = new (window.AudioContext || window.webkitAudioContext)();
+      analyser  = audioCtx.createAnalyser();
+      const src = audioCtx.createMediaStreamSource(stream);
+      src.connect(analyser);
+      analyser.fftSize = 256;
+      const data = new Uint8Array(analyser.frequencyBinCount);
+
+      noiseTimer = setInterval(() => {
+        analyser.getByteFrequencyData(data);
+        const avg   = data.reduce((a,b) => a+b, 0) / data.length;
+        const level = Math.min(3, Math.floor(avg / 25));
+        // Color the noise bars
+        ['nb1','nb2','nb3'].forEach((id, i) => {
+          const el = document.getElementById(id);
+          if (el) el.className = i < level ? 'active' : '';
+        });
+        // Warn if too noisy
+        if (avg > 60) {
+          document.getElementById('voiceBannerText').textContent = '⚠️ Noisy environment — speak closer!';
+        } else if (isListening) {
+          document.getElementById('voiceBannerText').textContent = 'Listening…';
+        }
+      }, 200);
+    }).catch(() => {});
+}
+
+function stopNoiseMonitor() {
+  if (noiseTimer) clearInterval(noiseTimer);
+  if (audioCtx)   audioCtx.close().catch(() => {});
+  audioCtx = null; analyser = null;
+}
+
+// Wake word detection
+function initWakeWord() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) return;
+  const wakeRec = new SR();
+  wakeRec.continuous    = true;
+  wakeRec.interimResults = true;
+  wakeRec.lang          = 'en-IN';
+  wakeRec.onresult = e => {
+    const transcript = Array.from(e.results)
+      .map(r => r[0].transcript.toLowerCase()).join(' ');
+    if (transcript.includes('hey dinebot') || transcript.includes('hi dinebot')) {
+      wakeRec.stop();
+      openChat();
+      addBotMessage('👋 Hey! I heard you. What would you like to order?');
+      speak("Hey! I heard you. What would you like to order?");
+      setTimeout(() => startVoice(), 1000);
+    }
+  };
+  wakeRec.onend = () => {
+    // Restart continuous wake word listening
+    try { wakeRec.start(); } catch {}
+  };
+  try { wakeRec.start(); } catch {}
+}
+
+// TTS
+function speak(text) {
+  if (!window.speechSynthesis) return;
+  const clean = text.replace(/<[^>]+>/g,'').replace(/[🎤✅💡🔥⚠️📦🙏🎉🛒₹#★⭐🗑️♻️]/g,'')
+                    .replace(/\n/g,'. ').slice(0, 200);
+  const u = new SpeechSynthesisUtterance(clean);
+  u.lang = 'en-IN'; u.rate = 1.0; u.pitch = 1.1;
+  window.speechSynthesis.cancel();
+  window.speechSynthesis.speak(u);
+}
+</script>
+</body>
+</html>
